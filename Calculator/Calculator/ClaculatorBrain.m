@@ -38,6 +38,12 @@
     double result = 0;
     if([operation isEqualToString:@"+"]){
         result = [self popOperand] + [self popOperand];
+    }else if([operation isEqualToString:@"-"]){
+        result =  0 - [self popOperand] +[self popOperand];
+    }else if([operation isEqualToString:@"*"]){
+        result =  [self popOperand] *[self popOperand];
+    }else if([operation isEqualToString:@"/"]){
+        result =  (1/[self popOperand]) *[self popOperand];
     }
     [self pushOperand: result];
     return result;
