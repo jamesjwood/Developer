@@ -10,43 +10,75 @@
 
 @interface ClaculatorBrain()
 
-@property (nonatomic, strong) NSMutableArray *operandStack;
+@property (nonatomic, strong) NSMutableArray *programStack;
 @end
 
 @implementation ClaculatorBrain
-@synthesize operandStack = _operandStack;
+@synthesize programStack = _programStack;
 
--(NSMutableArray *)operandStack
+-(NSMutableArray *)programStack
 {
-    if(_operandStack==nil) _operandStack = [[NSMutableArray alloc] init];
-    return _operandStack;
+    if(_programStack==nil) _programStack = [[NSMutableArray alloc] init];
+    return _programStack;
 }
 
 -(void)pushOperand: (double)operand
 {
-    [self.operandStack addObject:[NSNumber numberWithDouble:operand]];
+    [self.programStack addObject:[NSNumber numberWithDouble:operand]];
 }
 
--(double)popOperand
-{
-    NSNumber *operandObject = [self.operandStack lastObject];
-    if(operandObject)[self.operandStack removeLastObject];
-    return [operandObject doubleValue];
+-(id)program{
+    return [self.programStack copy];
 }
+
++(NSString *)descriptionOfProgram:(id)program
+{
+    NSString *description;
+    
+    for (NSString *operand in program) {
+        description = [description stringByAppendingString:operand];
+    }
+    return description;
+}
+
++(double)runProgram:(id)program{
+    NSMutableArray *stack;
+    if([program isKindOfClass:[NSArray class]])
+    {
+        stack = [program mutableCopy];
+    }
+    return [self popOperandOffStack:stack];
+}
+
++(double)popOperandOffStack:(NSMutableArray *)stack{
+    double result = 0;
+    id topOfStack = [stack lastObject];
+    if(topOfStack)[stack removeLastObject];
+    
+    if ([topOfStack isKindOfClass:([NSNumber class])])
+    {
+        return [topOfStack doubleValue];
+    }
+    else if ([topOfStack isKindOfClass:[NSString class]])
+    {
+        NSString  *operation = topOfStack;
+        if([operation isEqualToString:@"+"]){
+            result = [self popOperandOffStack:stack] + [self popOperandOffStack:stack];
+        }else if([operation isEqualToString:@"-"]){
+            result =  0 - [self popOperandOffStack:stack] +[self popOperandOffStack:stack];
+        }else if([operation isEqualToString:@"*"]){
+            result =  [self popOperandOffStack:stack] *[self popOperandOffStack:stack];
+        }else if([operation isEqualToString:@"/"]){
+            result =  (1/[self popOperandOffStack:stack]) *[self popOperandOffStack:stack];
+        }
+    }
+    return result;
+}
+
 -(double)performOperation:(NSString *)operation
 {
-    double result = 0;
-    if([operation isEqualToString:@"+"]){
-        result = [self popOperand] + [self popOperand];
-    }else if([operation isEqualToString:@"-"]){
-        result =  0 - [self popOperand] +[self popOperand];
-    }else if([operation isEqualToString:@"*"]){
-        result =  [self popOperand] *[self popOperand];
-    }else if([operation isEqualToString:@"/"]){
-        result =  (1/[self popOperand]) *[self popOperand];
-    }
-    [self pushOperand: result];
-    return result;
+    [self.programStack addObject:operation];
+    return [ClaculatorBrain runProgram:self.program];
 }
 
 @end
